@@ -46,11 +46,15 @@ export async function createInvoice(initialState: any, formData: FormData) {
   redirect("/dashboard/invoices");
 }
 
-export async function updateInvoice(id: string, formData: FormData) {
+export async function updateInvoice(
+  initialFlash: any,
+  data: { invoiceId: string; formData: FormData },
+) {
+  const invoiceId = data.invoiceId;
   const { customerId, amount, status } = UpdateInvoice.parse({
-    customerId: formData.get("customerId"),
-    amount: formData.get("amount"),
-    status: formData.get("status"),
+    customerId: data.formData.get("customerId"),
+    amount: data.formData.get("amount"),
+    status: data.formData.get("status"),
   });
 
   const amountInCents = amount * 100;
@@ -59,12 +63,16 @@ export async function updateInvoice(id: string, formData: FormData) {
     await sql`
     UPDATE invoices
     SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
-    WHERE id = ${id}
+    WHERE id = ${invoiceId}
   `;
   } catch (error) {
     // We'll also log the error to the console for now
-    console.error(error);
-    return { message: "Database Error: Failed to Update Invoice." };
+    // console.error(error);
+    // console.error("Database Error: Failed to Update Invoice.");
+    return {
+      isError: true,
+      message: "Failed to Update Invoice.",
+    };
   }
 
   revalidatePath("/dashboard/invoices");
