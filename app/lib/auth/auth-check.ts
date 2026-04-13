@@ -1,21 +1,15 @@
-import { Metadata } from 'next';
+"use server";
 
 import { auth } from "@/app/lib/auth/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-        title: 'Customers',
-};
-
-export default async function Page() {
+export default async function authCheck() {
         const session = await auth.api.getSession({
                 headers: await headers()
         });
 
         if (!session) {
-                redirect("/auth/login");
+                redirect("/");
         }
-
-        return <p>Customers Page</p>;
 }

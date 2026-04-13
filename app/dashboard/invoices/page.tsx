@@ -8,40 +8,52 @@ import { Suspense } from 'react';
 import { fetchInvoicesPages } from '@/app/lib/data';
 import { Metadata } from 'next';
 
+import { auth } from "@/app/lib/auth/auth";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+
 export const metadata: Metadata = {
-  title: 'Invoices',
+        title: 'Invoices',
 };
 
 export default async function Page(props: {
-  searchParams?: Promise<{
-    query?: string;
-    page?: string;
-  }>;
+        searchParams?: Promise<{
+                query?: string;
+                page?: string;
+        }>;
 }) {
-  const searchParams = await props.searchParams;
-  const query = searchParams?.query;
-  const currentPage = Number(searchParams?.page) || 1;
-  const totalPages = typeof query === 'string' ? await fetchInvoicesPages(query) : 0;
+        const session = await auth.api.getSession({
+                headers: await headers()
+        });
 
-  return (
-    <div className="w-full">
-      <div className="flex w-full items-center justify-between">
-        <h1 className={`${lusitana.className} text-2xl`}>Invoices</h1>
-      </div>
-      <div className="mt-4 flex items-center justify-between gap-2 md:mt-8">
-        <Search placeholder="Search invoices..." />
-        <CreateInvoice />
-      </div>
-      {typeof query === 'string' ? <>
-        <Suspense key={query + currentPage} fallback={<InvoicesTableSkeleton />}>
-          <Table query={query} currentPage={currentPage} />
-        </Suspense>
-        {totalPages > 0 ?
-          <div className="mt-5 flex w-full justify-center">
-            <Pagination totalPages={totalPages} />
-          </div> : <></>
+        if (!session) {
+                redirect("/auth/login");
         }
-      </> : <> </>}
-    </div>
-  );
+
+        const searchParams = await props.searchParams;
+        const query = searchParams?.query;
+        const currentPage = Number(searchParams?.page) || 1;
+        const totalPages = typeof query === 'string' ? await fetchInvoicesPages(query) : 0;
+
+        return (
+                <div className="w-full">
+                        <div className="flex w-full items-center justify-between">
+                                <h1 className={`${lusitana.className} text-2xl`}>Invoices</h1>
+                        </div>
+                        <div className="mt-4 flex items-center justify-between gap-2 md:mt-8">
+                                <Search placeholder="Search invoices..." />
+                                <CreateInvoice />
+                        </div>
+                        {typeof query === 'string' ? <>
+                                <Suspense key={query + currentPage} fallback={<InvoicesTableSkeleton />}>
+                                        <Table query={query} currentPage={currentPage} />
+                                </Suspense>
+                                {totalPages > 0 ?
+                                        <div className="mt-5 flex w-full justify-center">
+                                                <Pagination totalPages={totalPages} />
+                                        </div> : <></>
+                                }
+                        </> : <> </>}
+                </div>
+        );
 }
