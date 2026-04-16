@@ -8,8 +8,7 @@ const sslCa = process.env.POSTGRES_SSL_CA
         : undefined;
 
 export const auth = betterAuth({
-        // TODO set an env var
-        trustedOrigins: ["https://localhost:3000"],
+        trustedOrigins: [process.env.BETTER_AUTH_URL!],
         database: new Pool({
                 connectionString: process.env.POSTGRES_URL!,
                 ssl: {
